@@ -109,7 +109,7 @@ public class ExternalFileApi {
      */
     private void verifyExpiration(HttpServletRequest request) throws Exception {
         String expires = request.getParameter("expires");
-
+        expires = expires.replace(" ", "+");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date expirationDate = df.parse(expires);
         if(expirationDate.before(new Date())){
