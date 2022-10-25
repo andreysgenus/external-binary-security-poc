@@ -13,7 +13,7 @@ public class BinaryBroker {
 
     /**
      * In this example we obtain file based on locationId and fileId parameters.
-     * Any number of parameter can be used in a real implementation
+     * Note: locationId, fileId and userId parameters are used solely for the purpose of this example: any number of parameter can be used in a real implementation
      */
     public static InputStream getBinary(String locationId, String fileId, String userId) throws Exception {
         String url = "https://nuxeo-test-bucket.s3.us-east-2.amazonaws.com/" + fileId;
