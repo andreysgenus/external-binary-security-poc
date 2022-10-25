@@ -1,5 +1,3 @@
-http://localhost:8080/file?id=123
-
 https://www.baeldung.com/java-password-hashing
 
 https://stackoverflow.com/questions/11630941/pbkdf2-java-implementation-from-c-sharp
@@ -9,5 +7,11 @@ localhost:8080/generate-url?fileId=Test_PDF.pdf&locationId=my-s3-bucket&some-par
 
 
 heroku login
+git push heroku master
+heroku open
+
+
+https://dry-stream-74129.herokuapp.com/generate-url?fileId=Test_PDF.pdf&locationId=my-s3-bucket&some-param1=some-value1&userId=test&mime-type=application/pdf
+https://dry-stream-74129.herokuapp.com/generate-url?fileId=small.mp4&locationId=my-s3-bucket&some-param1=some-value1&userId=test&mime-type=video/mp4
 
 

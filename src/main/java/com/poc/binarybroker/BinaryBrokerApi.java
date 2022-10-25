@@ -84,11 +84,12 @@ public class BinaryBrokerApi {
             String locationId = request.getParameter("locationId");
             String fileId = request.getParameter("fileId");
             String userId = request.getParameter("userId");
+            String mimeType = request.getParameter("mimeType");
 
             return ResponseEntity.ok()
                     .headers(headers)
                     //.contentLength(file.length())
-                    .contentType(MediaType.APPLICATION_PDF)
+                    .contentType(new MediaType(mimeType))
                     .body(new InputStreamResource(
                             BinaryBroker.getBinary(locationId, fileId, userId)
                     ));
