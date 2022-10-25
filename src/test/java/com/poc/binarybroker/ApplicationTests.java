@@ -11,6 +11,9 @@ class ApplicationTests {
 	void contextLoads() {
 	}
 
+    /**
+     * Test that given the same input, the same output is always produced
+     */
     @Test
     void testEncryprion() throws Exception {
 
