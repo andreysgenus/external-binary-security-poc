@@ -1,4 +1,4 @@
-package com.dss.security;
+package com.poc.binarybroker;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -8,7 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,22 +15,21 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @RestController
-public class ExternalFileApi {
+public class BinaryBrokerApi {
 
     /**
      * Key to generate/ validate hash. Should be configurable
      */
-    String hashGeneratorKey = "dgfasgdf3456sd76dgcfdsfde76dghcbg";
+    private String hashGeneratorKey = "dgfasgdf3456sd76dgcfdsfde76dghcbg";
 
     /**
      * URL Expiration milliseconds. Should be configurable
      */
-    int expirationMilliseconds = 600000; //10 mins.
+    private int expirationMilliseconds = 600000; //10 mins.
 
     /**
      * Generate signed url from request url
@@ -71,9 +69,6 @@ public class ExternalFileApi {
             //verify token
             verifyToken(request);
 
-            File file = new File(getClass().getResource("../../../test.pdf").getFile());
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-
             //response headers
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Type", "application/pdf");
@@ -85,11 +80,19 @@ public class ExternalFileApi {
             headers.add("Pragma", "no-cache");
             headers.add("Expires", "0");
 
+            //obtain binary from the external source
+            String locationId = request.getParameter("locationId");
+            String fileId = request.getParameter("fileId");
+            String userId = request.getParameter("userId");
+
             return ResponseEntity.ok()
                     .headers(headers)
-                    .contentLength(file.length())
+                    //.contentLength(file.length())
                     .contentType(MediaType.APPLICATION_PDF)
-                    .body(resource);
+                    .body(new InputStreamResource(
+                            BinaryBroker.getBinary(locationId, fileId, userId)
+                    ));
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

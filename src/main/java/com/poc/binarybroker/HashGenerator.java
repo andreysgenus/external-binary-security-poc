@@ -1,4 +1,4 @@
-package com.dss.security;
+package com.poc.binarybroker;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
