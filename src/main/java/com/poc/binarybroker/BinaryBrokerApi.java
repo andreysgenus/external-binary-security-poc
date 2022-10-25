@@ -4,7 +4,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,7 +29,8 @@ public class BinaryBrokerApi {
     private int expirationMilliseconds = 600000; //10 mins.
 
     /**
-     * Generate signed url from request url
+     * Example how to generate a signed url from request url
+     *
      * @param request
      * @return
      */
@@ -62,34 +60,31 @@ public class BinaryBrokerApi {
     public ResponseEntity<Resource> getFile(HttpServletRequest request) {
 
         try {
-
             //verify expiration
             verifyExpiration(request);
 
             //verify token
             verifyToken(request);
 
+            //mime-type needs to be specified to create a correct response
+            String mimeType = request.getParameter("mime-type");
+
             //response headers
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Type", "application/pdf");
+            headers.add("Content-Type", mimeType);
+            //CORS headers are required:
             headers.add("Access-Control-Allow-Credentials", "true");
-            headers.add("Access-Control-Allow-Methods", "application/pdf");
-            headers.add("Access-Control-Allow-Origin", "http://local.nuxeo.io:8080");
+            headers.add("Access-Control-Allow-Methods", "GET,OPTIONS");
+            headers.add("Access-Control-Allow-Origin", "*"); //can restrict origin to a particular server instance(DEV, TEST, PREPROD or PROD)
             headers.add("Access-Control-Max-Age", "3000");
-            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-            headers.add("Pragma", "no-cache");
-            headers.add("Expires", "0");
 
             //obtain binary from the external source
             String locationId = request.getParameter("locationId");
             String fileId = request.getParameter("fileId");
             String userId = request.getParameter("userId");
-            String mimeType = request.getParameter("mimeType");
 
             return ResponseEntity.ok()
                     .headers(headers)
-                    //.contentLength(file.length())
-                    .contentType(new MediaType(mimeType))
                     .body(new InputStreamResource(
                             BinaryBroker.getBinary(locationId, fileId, userId)
                     ));
@@ -109,6 +104,7 @@ public class BinaryBrokerApi {
 
     /**
      * Verify if URL is expired
+     *
      * @return
      */
     private void verifyExpiration(HttpServletRequest request) throws Exception {
@@ -116,11 +112,16 @@ public class BinaryBrokerApi {
         expires = expires.replace(" ", "+");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date expirationDate = df.parse(expires);
-        if(expirationDate.before(new Date())){
+        if (expirationDate.before(new Date())) {
             throw new Exception("URL is expired");
         }
     }
 
+    /**
+     * Verify security token
+     * @param request
+     * @throws Exception
+     */
     private void verifyToken(HttpServletRequest request) throws Exception {
 
         //original url
@@ -135,9 +136,9 @@ public class BinaryBrokerApi {
         String token = request.getParameter("token");
 
         //compare generate hash with the token
-        if(!hash.equals(token)) {
+        if (!hash.equals(token)) {
             throw new Exception("Token is invalid for url " + url
-                    + " <br/>Hash _code: " + hash
+                    + " <br/>Hash code: " + hash
                     + " <br/>Hash value: " + token);
         }
     }
