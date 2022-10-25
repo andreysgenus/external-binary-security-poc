@@ -19,14 +19,11 @@ import java.util.Date;
 public class BinaryBrokerApi {
 
     /**
-     * Key to generate/ validate hash. Should be configurable
-     */
-    private String hashGeneratorKey = "dgfasgdf3456sd76dgcfdsfde76dghcbg";
-
-    /**
      * URL Expiration milliseconds. Should be configurable
      */
     private int expirationMilliseconds = 600000; //10 mins.
+
+    private HashGenerator hashGenerator = new HashGenerator();
 
     /**
      * Example how to generate a signed url from request url
@@ -47,7 +44,7 @@ public class BinaryBrokerApi {
             url = url + "&expires=" + expires;
 
             //add token param
-            String token = HashGenerator.generateHash(url, hashGeneratorKey);
+            String token = hashGenerator.generateHash(url);
             url = url + "&token=" + token;
             return url;
 
@@ -129,17 +126,13 @@ public class BinaryBrokerApi {
         //remove token param from the url
         url = url.substring(0, url.indexOf("&token="));
 
-        //generate hash from url
-        String hash = HashGenerator.generateHash(url, hashGeneratorKey);
-
         //token param
         String token = request.getParameter("token");
 
-        //compare generate hash with the token
-        if (!hash.equals(token)) {
+        //check that token is valid
+        if (!hashGenerator.matches(url, token)) {
             throw new Exception("Token is invalid for url " + url
-                    + " <br/>Hash code: " + hash
-                    + " <br/>Hash value: " + token);
+                    + " <br/>token: " + token);
         }
     }
 }

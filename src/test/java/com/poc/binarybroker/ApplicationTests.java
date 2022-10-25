@@ -18,12 +18,11 @@ class ApplicationTests {
     void testEncryprion() throws Exception {
 
         String plainText = "this is plain text to be encrypted";
-        String key = "adhgsgrgewrheruydys6f6467343dgfhgfjhdf";
 
-        String hash = HashGenerator.generateHash(plainText, key);
-        String hash1 = HashGenerator.generateHash(plainText, key);
+        HashGenerator hashGenerator = new HashGenerator();
+        String hash = hashGenerator.generateHash(plainText);
 
-        Assertions.assertEquals(hash, hash1);
+        Assertions.assertTrue(hashGenerator.matches(plainText, hash));
     }
 
 }
