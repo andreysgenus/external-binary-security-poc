@@ -110,7 +110,10 @@ public class BinaryBrokerApi {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date expirationDate = df.parse(expires);
         if (expirationDate.before(new Date())) {
-            throw new Exception("URL is expired");
+            throw new Exception("URL is expired:"
+                    + " <br/>expiration date: " + df.format(expirationDate)
+                    + " <br/>current date: " + df.format(new Date()));
+
         }
     }
 
