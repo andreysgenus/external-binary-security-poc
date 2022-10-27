@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -105,7 +108,7 @@ public class BinaryBrokerApi {
      * @return
      */
     private void verifyExpiration(HttpServletRequest request) throws Exception {
-        String expires = request.getParameter("expires");
+        String expires = decodeParam(request.getParameter("expires"));
         expires = expires.replace(" ", "+");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date expirationDate = df.parse(expires);
@@ -125,7 +128,7 @@ public class BinaryBrokerApi {
     private void verifyToken(HttpServletRequest request) throws Exception {
 
         //original url
-        String url = request.getRequestURI() + "?" + request.getQueryString();
+        String url = request.getRequestURI() + "?" + decodeParam(request.getQueryString());
         //remove token param from the url
         url = url.substring(0, url.indexOf("&token="));
 
@@ -137,5 +140,15 @@ public class BinaryBrokerApi {
             throw new Exception("Token is invalid for url " + url
                     + " <br/>token: " + token);
         }
+    }
+
+    /**
+     * url parameters need to be decoded, for example, the correct value for "My%20Test%20Pdf" is "My Test Pdf"
+     * @param value
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    private String decodeParam(String value) throws UnsupportedEncodingException {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
     }
 }
