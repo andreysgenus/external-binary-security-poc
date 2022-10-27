@@ -73,7 +73,7 @@ public class BinaryBrokerApi {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Type", mimeType);
             //CORS headers are required:
-            String origin = request.getParameter("Origin");
+            String origin = request.getHeader("Origin");
             //TODO may need to check if origin allowed
             //headers.add("Access-Control-Allow-Credentials", "true");
             headers.add("Access-Control-Allow-Methods", "GET,OPTIONS");
