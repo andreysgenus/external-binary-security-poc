@@ -73,7 +73,7 @@ public class BinaryBrokerApi {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Type", mimeType);
             //CORS headers are required:
-            //headers.add("Access-Control-Allow-Credentials", "true");
+            //headers.add("Access-Control-Allow-Credentials", "true"); //Access-Control-Allow-Origin must not be the wildcard '*' if this is set to true
             headers.add("Access-Control-Allow-Methods", "GET,OPTIONS");
             headers.add("Access-Control-Allow-Origin", "*"); //can restrict origin to a particular server instance(DEV, TEST, PREPROD or PROD)
             headers.add("Access-Control-Max-Age", "3000");
