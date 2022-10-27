@@ -73,9 +73,11 @@ public class BinaryBrokerApi {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Type", mimeType);
             //CORS headers are required:
-            //headers.add("Access-Control-Allow-Credentials", "true"); //Access-Control-Allow-Origin must not be the wildcard '*' if this is set to true
+            String origin = request.getParameter("Origin");
+            //TODO may need to check if origin allowed
+            //headers.add("Access-Control-Allow-Credentials", "true");
             headers.add("Access-Control-Allow-Methods", "GET,OPTIONS");
-            headers.add("Access-Control-Allow-Origin", "*"); //can restrict origin to a particular server instance(DEV, TEST, PREPROD or PROD)
+            headers.add("Access-Control-Allow-Origin", origin);
             headers.add("Access-Control-Max-Age", "3000");
 
             //obtain binary from the external source
