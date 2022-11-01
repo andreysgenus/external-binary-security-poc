@@ -184,6 +184,7 @@ public class BinaryBrokerApi {
      * @throws UnsupportedEncodingException
      */
     private String decodeParam(String value) throws UnsupportedEncodingException {
+        //No need for this. Spring web framework does URL decoding decoding automatically
         //if(value != null) {
             //return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
         //}
