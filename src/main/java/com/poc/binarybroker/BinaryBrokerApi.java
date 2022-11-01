@@ -5,6 +5,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -51,18 +52,17 @@ public class BinaryBrokerApi {
 
             Map<String, String> params = parseUrlParameters(url);
             for(Map.Entry<String, String> param : params.entrySet()) {
-                sb.append("&").append(param.getKey()).append("=").append(URLEncoder.encode(param.getValue(), "UTF-8"));
+                sb.append("&").append(param.getKey()).append("=").append(encodeParam(param.getValue()));
             }
             //add expiration date parameter
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
             String expires = df.format(new Date(new Date().getTime() + expirationMilliseconds));
 
-
-            sb.append("&expires=").append(URLEncoder.encode(expires, "UTF-8"));
+            sb.append("&expires=").append(encodeParam(expires));
 
             //add token param
             String token = hashGenerator.generateHash(sb.toString());
-            sb.append("&token=").append(URLEncoder.encode(token, "UTF-8"));
+            sb.append("&token=").append(token);
 
             return sb.toString();
 
@@ -152,13 +152,28 @@ public class BinaryBrokerApi {
         url = url.substring(0, url.indexOf("&token="));
 
         //token param
-        String token = decodeParam(request.getParameter("token"));
+        String token = request.getParameter("token");
 
         //check that token is valid
         if (!hashGenerator.matches(url, token)) {
             throw new Exception("Token is invalid for url " + url
                     + " <br/>token: " + token);
         }
+    }
+
+    /**
+     * All request parameters except for token are URL encoded
+     * They need to be decoded, for example, the correct value for "My%20Test%20Pdf" is "My Test Pdf"
+     * @param value
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    private String encodeParam(String value) throws UnsupportedEncodingException {
+        if(value != null) {
+            String encoded = value.replace( "+", "%2B");
+            return URLEncoder.encode(encoded, StandardCharsets.UTF_8.toString());
+        }
+        return null;
     }
 
     /**
@@ -169,10 +184,11 @@ public class BinaryBrokerApi {
      * @throws UnsupportedEncodingException
      */
     private String decodeParam(String value) throws UnsupportedEncodingException {
-        if(value != null) {
-            return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
-        }
-        return null;
+        //if(value != null) {
+            //return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        //}
+        //return null;
+        return value;
     }
 
     /**
