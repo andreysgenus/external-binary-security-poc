@@ -12,11 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestController
 public class BinaryBrokerApi {
@@ -37,19 +42,29 @@ public class BinaryBrokerApi {
     @GetMapping("/generate-url")
     public String generateUrl(HttpServletRequest request) {
         try {
-            //construct url
-            String query = request.getQueryString(); //original url query string
-            String url = "/file?" + query;
+            //get original url
+            URL url = new URL(request.getRequestURL().toString() + "?" + request.getQueryString());
 
+            //construct url
+            //add url parameters from request
+            StringBuilder sb = new StringBuilder("/file?");
+
+            Map<String, String> params = parseUrlParameters(url);
+            for(Map.Entry<String, String> param : params.entrySet()) {
+                sb.append("&").append(param.getKey()).append("=").append(URLEncoder.encode(param.getValue(), "UTF-8"));
+            }
             //add expiration date parameter
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
             String expires = df.format(new Date(new Date().getTime() + expirationMilliseconds));
-            url = url + "&expires=" + expires;
+
+
+            sb.append("&expires=").append(URLEncoder.encode(expires, "UTF-8"));
 
             //add token param
-            String token = hashGenerator.generateHash(url);
-            url = url + "&token=" + token;
-            return url;
+            String token = hashGenerator.generateHash(sb.toString());
+            sb.append("&token=").append(URLEncoder.encode(token, "UTF-8"));
+
+            return sb.toString();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -67,7 +82,7 @@ public class BinaryBrokerApi {
             verifyToken(request);
 
             //mime-type needs to be specified to create a correct response
-            String mimeType = request.getParameter("mime-type");
+            String mimeType = decodeParam(request.getParameter("mime-type"));
 
             //response headers
             HttpHeaders headers = new HttpHeaders();
@@ -83,9 +98,9 @@ public class BinaryBrokerApi {
             }
 
             //obtain binary from the external source
-            String locationId = request.getParameter("locationId");
-            String fileId = request.getParameter("fileId");
-            String userId = request.getParameter("userId");
+            String locationId = decodeParam(request.getParameter("locationId"));
+            String fileId = decodeParam(request.getParameter("fileId"));
+            String userId = decodeParam(request.getParameter("userId"));
 
             return ResponseEntity.ok()
                     .headers(headers)
@@ -113,7 +128,7 @@ public class BinaryBrokerApi {
      */
     private void verifyExpiration(HttpServletRequest request) throws Exception {
         String expires = decodeParam(request.getParameter("expires"));
-        expires = expires.replace(" ", "+");
+        //expires = expires.replace(" ", "+");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date expirationDate = df.parse(expires);
         if (expirationDate.before(new Date())) {
@@ -132,12 +147,12 @@ public class BinaryBrokerApi {
     private void verifyToken(HttpServletRequest request) throws Exception {
 
         //original url
-        String url = request.getRequestURI() + "?" + decodeParam(request.getQueryString());
+        String url = request.getRequestURI() + "?" + request.getQueryString();
         //remove token param from the url
         url = url.substring(0, url.indexOf("&token="));
 
         //token param
-        String token = request.getParameter("token");
+        String token = decodeParam(request.getParameter("token"));
 
         //check that token is valid
         if (!hashGenerator.matches(url, token)) {
@@ -147,12 +162,33 @@ public class BinaryBrokerApi {
     }
 
     /**
-     * url parameters need to be decoded, for example, the correct value for "My%20Test%20Pdf" is "My Test Pdf"
+     * All request parameters are URL encoded
+     * They need to be decoded, for example, the correct value for "My%20Test%20Pdf" is "My Test Pdf"
      * @param value
      * @return
      * @throws UnsupportedEncodingException
      */
     private String decodeParam(String value) throws UnsupportedEncodingException {
-        return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        if(value != null) {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        }
+        return null;
+    }
+
+    /**
+     * Parse a URI Parameters into Name-Value Map
+     * @param url
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    private Map<String, String> parseUrlParameters(URL url) throws UnsupportedEncodingException {
+        Map<String, String> params = new LinkedHashMap<String, String>();
+        String query = url.getQuery();
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int pos = pair.indexOf("=");
+            params.put(URLDecoder.decode(pair.substring(0, pos), "UTF-8"), URLDecoder.decode(pair.substring(pos + 1), "UTF-8"));
+        }
+        return params;
     }
 }
