@@ -34,6 +34,19 @@ public class BinaryBrokerApi {
 
     private HashGenerator hashGenerator = new HashGenerator();
 
+    @GetMapping("/external-url")
+    public String getExternalUrlUrl(HttpServletRequest request) {
+        try{
+            String locationId = decodeParam(request.getParameter("locationId"));
+            String fileId = decodeParam(request.getParameter("fileId"));
+            String userId = decodeParam(request.getParameter("userId"));
+
+            return BinaryBroker.getBinaryUrl(locationId, fileId, userId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
     /**
      * Example how to generate a signed url from request url
      *

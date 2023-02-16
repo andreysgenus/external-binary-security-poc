@@ -19,4 +19,8 @@ public class BinaryBroker {
         String url = "https://nuxeo-test-bucket.s3.us-east-2.amazonaws.com/" + fileId;
         return new BufferedInputStream(new URL(url).openStream());
     }
+
+    public static String getBinaryUrl(String locationId, String fileId, String userId) throws Exception {
+         return "https://nuxeo-test-bucket.s3.us-east-2.amazonaws.com/" + fileId;
+    }
 }
