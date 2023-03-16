@@ -27,12 +27,19 @@ public class HashGenerator {
 
     int saltKeyLength = 16;
 
+    private String saltValue; //salt string used for testing only. this will produce the same token value for the same input string
+
     public String generateHash(String data) throws Exception {
 
         //generate salt
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[saltKeyLength];
         random.nextBytes(salt);
+
+        if(saltValue != null) {
+            //for testing only
+            salt = saltValue.getBytes(StandardCharsets.UTF_8);
+        }
 
         //encode
         byte[] hash = encode(data, salt);
@@ -82,5 +89,13 @@ public class HashGenerator {
         byte[] subarray = new byte[length];
         System.arraycopy(array, beginIndex, subarray, 0, length);
         return subarray;
+    }
+
+    public void setSaltValue(String saltValue) {
+        this.saltValue = saltValue;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 }

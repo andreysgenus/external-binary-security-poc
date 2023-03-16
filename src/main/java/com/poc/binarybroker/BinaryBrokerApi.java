@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 @RestController
 public class BinaryBrokerApi {
@@ -37,6 +38,12 @@ public class BinaryBrokerApi {
     @GetMapping("/external-url")
     public String getExternalUrlUrl(HttpServletRequest request) {
         try{
+            //verify expiration
+            verifyExpiration(request);
+
+            //verify token
+            verifyToken(request);
+
             String locationId = decodeParam(request.getParameter("locationId"));
             String fileId = decodeParam(request.getParameter("fileId"));
             String userId = decodeParam(request.getParameter("userId"));
@@ -61,17 +68,22 @@ public class BinaryBrokerApi {
 
             //construct url
             //add url parameters from request
-            StringBuilder sb = new StringBuilder("/file?");
+            StringBuilder sb = new StringBuilder("/external-url?");
 
             Map<String, String> params = parseUrlParameters(url);
             for(Map.Entry<String, String> param : params.entrySet()) {
                 sb.append("&").append(param.getKey()).append("=").append(encodeParam(param.getValue()));
             }
             //add expiration date parameter
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-            String expires = df.format(new Date(new Date().getTime() + expirationMilliseconds));
+            Date expirationDate = new Date(new Date().getTime() + expirationMilliseconds);
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            df.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-            sb.append("&expires=").append(encodeParam(expires));
+            String expires = df.format(expirationDate);
+            String expires1 = DateFormatUtils.formatISODateTime(expirationDate);
+            sb.append("&expires=")
+                    .append(expires);
+                    //.append(encodeParam(expires));
 
             //add token param
             String token = hashGenerator.generateHash(sb.toString());
@@ -140,9 +152,10 @@ public class BinaryBrokerApi {
      * @return
      */
     private void verifyExpiration(HttpServletRequest request) throws Exception {
-        String expires = decodeParam(request.getParameter("expires"));
+        String expires = request.getParameter("expires");
         //expires = expires.replace(" ", "+");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
         Date expirationDate = df.parse(expires);
         if (expirationDate.before(new Date())) {
             throw new Exception("URL is expired:"
